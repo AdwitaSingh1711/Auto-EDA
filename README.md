@@ -7,7 +7,7 @@
 ## Features
 
 - Automatic EDA for `.csv` files
-- Correlation detection and plotting (scatter + pie charts)
+- Correlation detection and plotting
 - Optional LLM-powered insights (via Ollama)
 - Outputs key dataset information:
   - Dataset shape
@@ -26,8 +26,12 @@
 ### 2. Clone the repo
 
 ```bash
-git clone https://github.com/yourusername/autoeda.git
-cd autoeda
+git clone https://github.com/AdwitaSingh1711/Auto-EDA.git
+cd Auto-EDA
+```
+### 3. Set up Python environment 
+
+```bash
 
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -36,10 +40,10 @@ pip install -r requirements.txt
 ```
 
 ### 3. Usage
-```
+```bash
 python autoeda.py --file_path path/to/data.csv --file_type csv --visualise True --use_llm True
 ```
 
 ## Contributing 
 
-Pull requests are welcome! If you have feature ideas or spot a bug, open an issue or fork and submit a PR.
+Still a work in Progress (pull requests are welcome though). If you have feature ideas or spot a bug, open an issue or fork and submit a PR.
