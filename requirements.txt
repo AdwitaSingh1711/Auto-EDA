@@ -1,0 +1,9 @@
+pandas
+numpy
+plotly
+loguru
+argparse
+ollama
+scikit-learn
+matplotlib
+seaborn
