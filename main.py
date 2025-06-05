@@ -24,6 +24,34 @@ def plot_data(store_corr_columns, df):
         # plot pie chart for all labels in label type columns if --visualise set to true
         pass
 
+def check_datatype(df):
+    print('16\n')
+    issues = {}
+
+    for col in df.columns:
+        col_issues = []
+
+        if df[col].dtype=='object':
+            temp_vals = df[col].dropna().head(10).astype(str)
+            if any(len(val)>8 and ('-' in val or '/' in val) for val in temp_vals):
+                col_issues.append("Potential datatime column stored as object")
+            
+            else:
+                try:
+                    pd.to_numeric(df[col], errors='raise')
+                    col_issues.append("Numeric data stored as object")
+                except:
+                    temp_types = df[col].dropna().apply(type).unique()
+                    if len(temp_types)>1:
+                        col_issues.append(f"Mixed datatypes in {temp_types}")
+        
+        if col_issues:
+            issues[col]=col_issues
+
+    print('17\n')
+    
+    return issues
+
 
 def call_summarise_csv(filetype):
     print("2\n")
@@ -58,6 +86,8 @@ def call_summarise_csv(filetype):
     # if store_corr_columns:
     #     plot_data(store_corr_columns, df)
 
+    datatype_issues = check_datatype(df)
+
     # return (no_of_records, no_of_columns), column_names, check_null_value_columns, data_info, store_corr_columns
     return {
         "shape": (no_of_records, no_of_columns),
@@ -65,7 +95,8 @@ def call_summarise_csv(filetype):
         "columns_with_null_values":check_null_value_columns,
         "info_about_data": data_info,
         "store_corr_matrix": store_corr_columns,
-        "dataframe":df
+        "dataframe":df,
+        "potential_datatype_issues":datatype_issues
     }
 
 
@@ -79,23 +110,23 @@ def analyse_file(filepath, filetype):
     
 def generate_llm_advice(summary):
     print("4\n")
-    # system_message = (f"You are a data analyst who has just performed EDA on a csv file and obtained the following results:\n"
-    #                 f"Shape of data: {summary['shape']}\n"
-    #                 f"List of Columns in dataset: {summary['columns']}\n"
-    #                 f"Columns with null values: {summary['columns_with_null_values']}\n"
-    #                 f"Data Information: {summary['info_about_data']}\n"
-    #                 f"Correlation Matrix: {summary['store_corr_matrix']}\n"
-    #                 "Based on this data, present future steps for proceeding with data cleaning and visualisation. "
-    #                 "Select from:\n 1. Remove null values \n 2. Suggest visualisations between columns \n 3. Visualize correlation matrix, etc."
-    #                 )
-    system_message = (
-                    "You are a data analyst reviewing EDA results. "
-                    f"Dataset has {summary['shape'][0]} rows and {summary['shape'][1]} columns.\n"
-                    f"Columns: {', '.join(summary['columns'])}\n"
-                    f"Null values found in: {summary['columns_with_null_values'] or 'None'}\n"
-                    "Suggest 3-5 specific next steps for data cleaning and visualization. "
-                    "Be concise and focus on actionable insights."
+    system_message = (f"You are a data analyst who has just performed EDA on a csv file and obtained the following results:\n"
+                    f"Shape of data: {summary['shape']}\n"
+                    f"List of Columns in dataset: {summary['columns']}\n"
+                    f"Columns with null values: {summary['columns_with_null_values']}\n"
+                    f"Data Information: {summary['info_about_data']}\n"
+                    f"Correlation Matrix: {summary['store_corr_matrix']}\n"
+                    "Based on this data, present future steps (as pointers in plaintext) for proceeding with data cleaning and visualisation. "
+                    "Select from:\n 1. Remove null values \n 2. Suggest visualisations between columns \n 3. Visualize correlation matrix, etc."
                     )
+    # system_message = (
+    #                 "You are a data analyst reviewing EDA results. "
+    #                 f"Dataset has {summary['shape'][0]} rows and {summary['shape'][1]} columns.\n"
+    #                 f"Columns: {', '.join(summary['columns'])}\n"
+    #                 f"Null values found in: {summary['columns_with_null_values'] or 'None'}\n"
+    #                 "Suggest 3-5 specific next steps for data cleaning and visualization. "
+    #                 "Be concise and focus on actionable insights."
+    #                 )
     print("11\n")
     
     messages = [
@@ -150,32 +181,33 @@ def save_report(summary, format="txt", output_path="eda_report"):
 
     except Exception as e:
         logger.error(f"Error saving my bro: {e}")
+        
 
-def test_ollama_connection():
-    print("Testing Ollama connection...")
-    try:
-        response = ollama.chat(
-            model='llama3.2:latest',
-            messages=[{'role': 'user', 'content': 'Say "Hello World"'}]
-        )
-        if response and 'message' in response:
-            print(f"Test successful! Response: {response['message']['content']}")
-            return True
-        else:
-            print("Empty test response")
-            return False
-    except Exception as e:
-        print(f"Test failed: {e}")
-        return False
+# def test_ollama_connection():
+#     print("Testing Ollama connection...")
+#     try:
+#         response = ollama.chat(
+#             model='llama3.2:latest',
+#             messages=[{'role': 'user', 'content': 'Say "Hello World"'}]
+#         )
+#         if response and 'message' in response:
+#             print(f"Test successful! Response: {response['message']['content']}")
+#             return True
+#         else:
+#             print("Empty test response")
+#             return False
+#     except Exception as e:
+#         print(f"Test failed: {e}")
+#         return False
 
 
 def main():
     print("6\n")
     # Test Ollama connection first
 
-    if not test_ollama_connection():
-        logger.error("Ollama connection test failed. Cannot proceed with LLM analysis.")
-        return
+    # if not test_ollama_connection():
+    #     logger.error("Ollama connection test failed. Cannot proceed with LLM analysis.")
+    #     return
     parser = argparse.ArgumentParser(description="Perform automatic EDA for your CSV files")
 
     parser.add_argument("--file_path", type=str, required=True, help="Path of the csv file")
