@@ -238,7 +238,7 @@ class LLMAnalyzer:
                     f"List of Columns in dataset: {results.columns}\n"
                     f"Columns with null values: {results.columns_with_null_values}\n"
                     f"Data Information: {results.info_about_data}\n"
-                    f"High correlations found: {len(results.correlation_matrix)} pairs\n"
+                    f"High correlations found: {len(results.store_corr_matrix)} pairs\n"
                     f"Data type issues: {len(results.datatype_issues)} columns\n\n"
                     "Based on this data, present future steps (as pointers in plaintext) for proceeding with data cleaning and visualisation. "
                     "Select from:\n 1. Remove null values \n 2. Suggest visualisations between columns \n 3. Visualize correlation matrix, etc."
@@ -279,7 +279,7 @@ class LLMAnalyzer:
             logger.error(f"Error querying Ollama: {e}")
             return "Could not get advice from LLM."
     
-    def test_ollama_connection():
+    def test_ollama_connection(self):
         """Function to check whether Ollama is confugured on your system"""
         print("Testing Ollama connection...")
         try:
@@ -362,7 +362,7 @@ class DataLoader:
     Currently supports CSVs"""
 
     @staticmethod
-    def load_data(fike_path:str, file_type:str)->pd.DataFrame:
+    def load_data(file_path:str, file_type:str)->pd.DataFrame:
         """Loads data from file"""
         if file_type.lower()=="csv":
             return pd.read_csv(file_path)
@@ -391,7 +391,7 @@ class AutoEDA:
             df = self.data_loader.load_data(file_path, file_type)
 
             # ANALYZE DATA
-            results = self.analyzer.analyze_dataframe(df)
+            results = self.analyzer.analyze_df(df)
 
             # GENERATE VISUALIZATIONS
             if visualize:
@@ -450,7 +450,7 @@ def main():
 
     parser.add_argument("--file_path", type=str, required=True, help="Path to the CSV file")
     parser.add_argument("--file_type", type=str, required=True, help="File extension type(eg 'csv')")
-    parser.add_argument("--use_llm", type=bool, help="Use local LM to provide EDA suggestions")
+    parser.add_argument("--use_llm", action="store_true", help="Use local LM to provide EDA suggestions")
     parser.add_argument("--visualize", action="store_true", help="Create visualizations for the data")
     parser.add_argument("--save_report", action="store_true", help="Save the EDA output to file")
     parser.add_argument("--output_format", choices=["txt","json"], default="txt", help="Output report format")
