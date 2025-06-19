@@ -4,6 +4,7 @@ from loguru import logger
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graphic_objects as go
 import os
 import json
 import io
@@ -11,6 +12,7 @@ import traceback
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional, Any
 from pathlib import Path
+from plotly.subplots import make_subplots
 
 
 @dataclass
@@ -159,17 +161,40 @@ class DataAnalyzer:
 class DataVisualizer:
     """Performs elementary data visualisation"""
 
+    def __init__(self, output_dir: str="eda_plots"):
+        self.output_dir = output_dir
+        self.output_dir.mkdir(exist_ok=True)
+        self.created_files = []
+
+    @staticmethod
+    def safe_filename(text: str)->str:
+        """Convert text to safe filename"""
+        return "".join(c for c in text if c.isalnum() or c in (' ', '_','-')).rstrip()
+
+
     @staticmethod
     def create_scatter_plot(correlations: List[Tuple[str,str,float]], df:pd.DataFrame):
         """creates scatter plots for correlated variables"""
-        if len(correlations)>=2:
-            for x_col, y_col, corr_eval in correlations:
+        if len(correlations)>=1:
+            for i, (x_col, y_col, corr_eval) in enumerate(correlations):
                 try:
                     fig= px.scatter(
                         df, x_col, y_col,
                         title=f"Scatter Plot: {x_col} vs {y_col} (r={corr_eval:.2f})"
                     )
-                    fig.show()
+                    # fig.show()
+
+                    # SAVE FOR HTML
+                    filename = f"Scatter_{self.safe_filename(x_col)}_vs_{self.safe_filename(y_col)}.html"
+                    filepath = self.output_dir / filename
+                    fig.write_html(str(filepath))
+                    self.created_files.append(filepath)
+
+                    # SAVE AS PNG
+                    png_filename = f"Scatter_{self.safe_filename(x_col)}_vs_{self.safe_filename(y_col)}.png"
+                    png_filepath = self.output_dir/filename
+                    fig.write_image(str(png_filepath), width = 800, height = 600)
+                    self.created_files.append(png_filepath)
                 
                 except Exception as e:
                     logger.warning(f"Could not create scatter plot for {x_col} vs {y_col}: {e}")
@@ -183,11 +208,23 @@ class DataVisualizer:
             try:
                 # Histogram
                 fig_hist = px.histogram(df, x=col, title=f'Distribution of {col}')
-                fig_hist.show()
+                # fig_hist.show()
+
+                hist_filename = f"histogram_{self.safe_filename(col).html}"
+                hist_filepath = self.output_dir/hist_filename
+                fig_hist.write_html(str(hist_filepath))
+                self.created_files.append(hist_filepath)
                 
                 # Box plot
                 fig_box = px.box(df, y=col, title=f'Box Plot of {col}')
-                fig_box.show()
+                box_filename = f"boxplot_{self.safe_filename(col).html}"
+                box_filepath = self.output_dir/box_filename
+                fig_box.write_html(str(box_filepath))
+                self.created_files.append(box_filepath)
+
+                logger.info("Distribution plots saved for {col}")
+
+                # fig_box.show()
             except Exception as e:
                 logger.warning(f"Could not create distribution plots for {col}: {e}")
 
@@ -203,7 +240,17 @@ class DataVisualizer:
                             title="Correlation Heatmap",
                             color_continuous_scale='RdBu_r',
                             aspect="auto")
-                fig.show()
+
+                # ADD TEXT CONNOCATIONS
+                fig.update_traces(texttemplate="%{z:.2f}", textfont_size=10)
+
+                corrmap_filename = "Correlation_heatmap.html"
+                corrmap_filepath = self.output_dir/corrmap_filename
+                fig.write_html(str(corrmap_filepath))
+                self.created_files.append(corrmap_filepath)
+
+                logger.info("Correlation heatmap saved at {corrmap_filepath}")
+                # fig.show()
             except Exception as e:
                 logger.warning(f"Could not create correlation heatmap: {e}")
 
@@ -218,10 +265,98 @@ class DataVisualizer:
                     value_counts = df[col].value_counts()
                     fig = px.bar(x=value_counts.index, y=value_counts.values,
                                 title=f'Distribution of {col}')
-                    fig.show()
+                    # fig.show()
+
+                    cat_filename = f"Categorical_plots{self.safe_filename(col)}.html"
+                    cat_filepath = self.output_dir/cat_filename
+                    fig.write_html(str(cat_filepath))
+                    self.created_files.append(filepath)
+
+                    logger.info("Categorical plot saved to: {cat_filepath}")
                 
                 except Exception as e:
                     logger.warning(f"Could not create categorical plot for {col}: {e}")
+    
+    def create_summary(self, df: pd.DataFrame, results):
+        """HTML for capturing all visualisations"""
+    
+
+    def generate_plot_index(self):
+        """HTML index for listing all visualisations"""
+
+        try:
+            html_content = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>EDA Visualization Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    h1 { color: #333; }
+                    .plot-link { 
+                        display: block; 
+                        margin: 10px 0; 
+                        padding: 10px; 
+                        background: #f5f5f5; 
+                        text-decoration: none; 
+                        border-radius: 5px;
+                        color: #333;
+                    }
+                    .plot-link:hover { background: #e0e0e0; }
+                </style>
+            </head>
+            <body>
+                <h1>EDA Visualization Report</h1>
+                <p>Click on the links below to view individual visualizations:</p>
+            """
+
+            for file_path in self.created_files:
+                if file_path.suffix == '.html':
+                    html_content += f'<a href="{file_path.name}" class="plot-link">{file_path.stem.replace("_", " ").title()}</a>\n'
+            
+            html_content += """</body></html>"""
+
+            index_path = self.output_dir/"index.html"
+            with open(index_path, 'w') as f:
+                f.write(html.content)
+
+            logger.success(f"Plot index created: {index_path}")
+
+            return index_path
+        
+        except Exception as e:
+            logger.error(f"Could not create plot index: {e}")
+            return None
+
+    
+    def print_visualization_summary(self):
+        """view summary of visualisations"""
+        if self.created_files:
+            print(f"\n Visualisations Created({len(self.created_files)} files)\n")
+            print(f"Output directory: {self.output_dir.absolute()}\n")
+
+            print("="*50)
+            html_files = [f for f in self.created_files if f.suffix == '.html']
+            png_files = [f for f in self.created_files if f.suffix == '.png']
+
+            if html_files:
+                print("\nInteractive file for visualisations\n")
+
+                for file_path in html_files:
+                    print(f"{file_path.name}")
+
+            if png_files:
+                print("\nStatic PNGs\n")
+
+                for file_path in png_files:
+                    print(f"{file_path.name}")
+
+            print(f"\n To view the plots: open {self.out_dir}/index.html in your browser\n")
+
+            print("="*50)
+
+        else: 
+            print("\nNo visualisations were created")
 
 
 class LLMAnalyzer:
@@ -374,14 +509,14 @@ class DataLoader:
 class AutoEDA:
     """Main class for performing EDA"""
 
-    def __init__(self, model_name:str="llama3.2:latest"):
+    def __init__(self, model_name:str="llama3.2:latest", plot_output_dir: str = "eda_plots"):
         self.analyzer = DataAnalyzer()
-        self.visualizer = DataVisualizer
+        self.visualizer = DataVisualizer(output_dir = plot_output_dir)
         self.llm_analyzer = LLMAnalyzer()
         self.report_generator = ReportGenerator()
         self.data_loader = DataLoader()
 
-    def run_eda(self, file_path: str, file_type:str, use_llm: bool=False, visualize: bool=False, save_report: bool=True, output_format: str="txt")->EDAResults:
+    def run_eda(self, file_path: str, file_type:str, use_llm: bool=False, visualize: bool=False, save_report: bool=True, output_format: str="txt", output_path: str="eda_report", plot_output_dir: str="eda_plots")->EDAResults:
         """Orchestrates the EDA process"""
 
         try:
@@ -401,6 +536,9 @@ class AutoEDA:
                 self.visualizer.create_correlation_heatmap(df)
                 self.visualizer.create_categorical_plots(df)
 
+                self.visualizer.generate_plot_index()
+                self.visualizer.print_visualization_summary()
+
             # GENERATE LLM RECOMMENDATIONS IF REQUESTED
             if use_llm: 
                 if self.llm_analyzer.test_ollama_connection():
@@ -413,7 +551,8 @@ class AutoEDA:
 
             # Save report if requested
             if save_report:
-                self.report_generator.save_report(results, output_format)
+                # self.report_generator.save_report(results, output_format, output_path)
+                self.report_generator.save_report(results, output_format, output_path)
 
             return results
 
@@ -455,6 +594,8 @@ def main():
     parser.add_argument("--save_report", action="store_true", help="Save the EDA output to file")
     parser.add_argument("--output_format", choices=["txt","json"], default="txt", help="Output report format")
     parser.add_argument("--model", type=str, default="llama3.2:latest", help="Ollama model to be used for analysis")
+    parser.add_argument("--output_path", type=str, default = "eda_report", help="path of directory where report is to be saved")
+    parser.add_argument("--plot_dir", type=str, default = "eda_plots", help="Directory to save visualisation plots")
 
     args=parser.parse_args()
 
@@ -463,7 +604,7 @@ def main():
             raise ValueError("You either forgot to specify the file type or the file path.")
 
         # INITIALISE AND RUN AUTO-EDA
-        auto_eda = AutoEDA(model_name = args.model)
+        auto_eda = AutoEDA(model_name = args.model, plot_output_dir = args.plot_dir)
 
         auto_eda.run_eda(
             file_path = args.file_path,
@@ -471,8 +612,12 @@ def main():
             use_llm = args.use_llm,
             visualize = args.visualize,
             save_report = args.save_report,
-            output_format = args.output_format
+            output_format = args.output_format,
+            output_path = args.output_path,
+            plot_output_dir = args.plot_dir
         )
+
+        auto_eda.print_basic_results(results)
 
     except Exception as e:
         logger.error("You did something wrong somewhere my bro:{e}")

@@ -1,0 +1,37 @@
+=== AUTO EDA REPORT ===
+
+Dataset shape: (299, 13)
+
+Columns: ['age', 'anaemia', 'creatinine_phosphokinase', 'diabetes', 'ejection_fraction', 'high_blood_pressure', 'platelets', 'serum_creatinine', 'serum_sodium', 'sex', 'smoking', 'time', 'DEATH_EVENT']
+
+Columns with null values: {}
+
+Data Information:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 299 entries, 0 to 298
+Data columns (total 13 columns):
+ #   Column                    Non-Null Count  Dtype  
+---  ------                    --------------  -----  
+ 0   age                       299 non-null    float64
+ 1   anaemia                   299 non-null    int64  
+ 2   creatinine_phosphokinase  299 non-null    int64  
+ 3   diabetes                  299 non-null    int64  
+ 4   ejection_fraction         299 non-null    int64  
+ 5   high_blood_pressure       299 non-null    int64  
+ 6   platelets                 299 non-null    float64
+ 7   serum_creatinine          299 non-null    float64
+ 8   serum_sodium              299 non-null    int64  
+ 9   sex                       299 non-null    int64  
+ 10  smoking                   299 non-null    int64  
+ 11  time                      299 non-null    int64  
+ 12  DEATH_EVENT               299 non-null    int64  
+dtypes: float64(3), int64(10)
+memory usage: 30.5 KB
+
+
+High correlations (>0.5):
+time<->DEATH_EVENT: 0.53
+DEATH_EVENT<->time: 0.53
+Datatype Mismatches: {}
+
+Categorical Analysis: {'anaemia': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {0: 170, 1: 129}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}, 'diabetes': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {0: 174, 1: 125}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}, 'ejection_fraction': {'dtype': 'int64', 'unique_count': 17, 'unique_percentage': 5.68561872909699, 'top_values': {35: 49, 38: 40, 40: 37, 25: 36, 30: 34}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': False}, 'high_blood_pressure': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {0: 194, 1: 105}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}, 'sex': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {1: 194, 0: 105}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}, 'smoking': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {0: 203, 1: 96}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}, 'DEATH_EVENT': {'dtype': 'int64', 'unique_count': 2, 'unique_percentage': 0.6688963210702341, 'top_values': {0: 203, 1: 96}, 'is_high_cardinality': False, 'potential_id_column': False, 'is_binary': True}}
