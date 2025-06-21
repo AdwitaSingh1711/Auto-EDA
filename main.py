@@ -4,7 +4,7 @@ from loguru import logger
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graphic_objects as go
+import plotly.graph_objects as go
 import os
 import json
 import io
@@ -162,8 +162,9 @@ class DataVisualizer:
     """Performs elementary data visualisation"""
 
     def __init__(self, output_dir: str="eda_plots"):
-        self.output_dir = output_dir
-        self.output_dir.mkdir(exist_ok=True)
+        self.output_dir = Path(output_dir)
+        # self.output_dir.mkdir(exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.created_files = []
 
     @staticmethod
@@ -606,16 +607,16 @@ def main():
         # INITIALISE AND RUN AUTO-EDA
         auto_eda = AutoEDA(model_name = args.model, plot_output_dir = args.plot_dir)
 
-        auto_eda.run_eda(
-            file_path = args.file_path,
-            file_type = args.file_type,
-            use_llm = args.use_llm,
-            visualize = args.visualize,
-            save_report = args.save_report,
-            output_format = args.output_format,
-            output_path = args.output_path,
-            plot_output_dir = args.plot_dir
-        )
+        results = auto_eda.run_eda(
+                    file_path = args.file_path,
+                    file_type = args.file_type,
+                    use_llm = args.use_llm,
+                    visualize = args.visualize,
+                    save_report = args.save_report,
+                    output_format = args.output_format,
+                    output_path = args.output_path,
+                    plot_output_dir = args.plot_dir
+                )
 
         auto_eda.print_basic_results(results)
 
