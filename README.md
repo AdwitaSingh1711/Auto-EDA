@@ -1,6 +1,6 @@
 # AutoEDA 
 
-**AutoEDA** is a command-line Python tool for developers and data analysts that performs automatic Exploratory Data Analysis (EDA) on CSV files. It summarizes the dataset, identifies missing values, highlights correlations, and can even suggest next steps using an LLM (via [Ollama](https://ollama.com)).
+**AutoEDA** is a command-line Python tool for developers and data analysts. It performs automatic Exploratory Data Analysis (EDA) on CSV files. It summarizes the dataset, identifies missing values, creates elementary visualisation plots, highlights correlations, and can even suggest next steps using an LLM (via [Ollama](https://ollama.com)).
 
 ---
 
@@ -15,7 +15,7 @@
   - Null value counts
   - Data types and structure
   - Highly correlated columns
-- Built-in plotting with Plotly
+- Built-in plotting with Plotly (viewable as an HTML dashboard)
 
 ---
 
@@ -38,8 +38,13 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 ```
+Make sure to run the ollama server in a separate terminal window if you're setting --use__llm = True using:
 
-### 3. Usage
+```bash
+ollama serve
+```
+
+### 4. Usage
 ```bash
 python autoeda.py --file_path path/to/data.csv --file_type csv --visualise True --use_llm True
 ```

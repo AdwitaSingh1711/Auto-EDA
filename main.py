@@ -30,7 +30,7 @@ class EDAResults:
 
 class DataAnalyzer:
     """Data cleaning and preprocessing"""
-    def __init__(self, max_unique_threshold: int = 20):
+    def __init__(self, max_unique_threshold: int = 10):
         self.max_unique_threshold = max_unique_threshold
 
     def analyze_correlations(self, df:pd.DataFrame) -> List[Tuple[str,str,float]]:
@@ -173,8 +173,7 @@ class DataVisualizer:
         return "".join(c for c in text if c.isalnum() or c in (' ', '_','-')).rstrip()
 
 
-    @staticmethod
-    def create_scatter_plot(correlations: List[Tuple[str,str,float]], df:pd.DataFrame):
+    def create_scatter_plot(self, correlations: List[Tuple[str,str,float]], df:pd.DataFrame):
         """creates scatter plots for correlated variables"""
         if len(correlations)>=1:
             for i, (x_col, y_col, corr_eval) in enumerate(correlations):
@@ -186,22 +185,24 @@ class DataVisualizer:
                     # fig.show()
 
                     # SAVE FOR HTML
-                    filename = f"Scatter_{self.safe_filename(x_col)}_vs_{self.safe_filename(y_col)}.html"
-                    filepath = self.output_dir / filename
-                    fig.write_html(str(filepath))
+                    filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}_vs_{DataVisualizer.safe_filename(y_col)}.html"
+                    filepath =  self.output_dir/ filename
+                    fig.write_html(str(filepath)
+                    ,include_plotlyjs=True,
+                    full_html=True )
                     self.created_files.append(filepath)
 
                     # SAVE AS PNG
-                    png_filename = f"Scatter_{self.safe_filename(x_col)}_vs_{self.safe_filename(y_col)}.png"
-                    png_filepath = self.output_dir/filename
+                    png_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}_vs_{DataVisualizer.safe_filename(y_col)}.png"
+                    png_filepath = self.output_dir/png_filename
                     fig.write_image(str(png_filepath), width = 800, height = 600)
                     self.created_files.append(png_filepath)
                 
                 except Exception as e:
                     logger.warning(f"Could not create scatter plot for {x_col} vs {y_col}: {e}")
 
-    @staticmethod
-    def create_distribution_plots(df: pd.DataFrame):
+
+    def create_distribution_plots(self, df: pd.DataFrame):
         """Create distribution plots for numeric columns"""
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         
@@ -211,17 +212,31 @@ class DataVisualizer:
                 fig_hist = px.histogram(df, x=col, title=f'Distribution of {col}')
                 # fig_hist.show()
 
-                hist_filename = f"histogram_{self.safe_filename(col).html}"
+                hist_filename = f"histogram_{DataVisualizer.safe_filename(col)}.html"
                 hist_filepath = self.output_dir/hist_filename
-                fig_hist.write_html(str(hist_filepath))
+                fig_hist.write_html(str(hist_filepath),
+                                    include_plotlyjs=True,
+                                    full_html=True )
                 self.created_files.append(hist_filepath)
+
+                png_hist_filename = f"Scatter_{DataVisualizer.safe_filename(col)}.png"
+                png_filepath = self.output_dir/png_hist_filename
+                fig_hist.write_image(str(png_hist_filepath), width = 800, height = 600)
+                self.created_files.append(png_filepath)
                 
                 # Box plot
                 fig_box = px.box(df, y=col, title=f'Box Plot of {col}')
-                box_filename = f"boxplot_{self.safe_filename(col).html}"
+                box_filename = f"boxplot_{DataVisualizer.safe_filename(col)}.html"
                 box_filepath = self.output_dir/box_filename
-                fig_box.write_html(str(box_filepath))
+                fig_box.write_html(str(box_filepath),
+                                    include_plotlyjs=True,
+                                    full_html=True)
                 self.created_files.append(box_filepath)
+
+                png_box_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}.png"
+                png_box_filepath = self.output_dir/png_box_filename
+                fig_box.write_image(str(png_box_filepath), width = 800, height = 600)
+                self.created_files.append(png_box_filepath)
 
                 logger.info("Distribution plots saved for {col}")
 
@@ -229,15 +244,15 @@ class DataVisualizer:
             except Exception as e:
                 logger.warning(f"Could not create distribution plots for {col}: {e}")
 
-    @staticmethod
-    def create_correlation_heatmap(df:pd.DataFrame):
+
+    def create_correlation_heatmap(self, df:pd.DataFrame):
         """Create an interactive correlation heatmap"""
         numeric_df = df.select_dtypes(include=[np.number])
 
         if not numeric_df.empty:
             try:
                 corr_matrix = numeric_df.corr()
-                fig = px.imshow(corr_matrix, 
+                fig = px.imshow(corr_matrix,
                             title="Correlation Heatmap",
                             color_continuous_scale='RdBu_r',
                             aspect="auto")
@@ -247,36 +262,74 @@ class DataVisualizer:
 
                 corrmap_filename = "Correlation_heatmap.html"
                 corrmap_filepath = self.output_dir/corrmap_filename
-                fig.write_html(str(corrmap_filepath))
+                fig.write_html(str(corrmap_filepath),
+                                    include_plotlyjs=True,
+                                    full_html=True)
                 self.created_files.append(corrmap_filepath)
+
+                png_corrmap_filename = f"Correlation_heatmap.png"
+                png_corrmap_filepath = self.output_dir/png_corrmap_filename
+                fig.write_image(str(png_corrmap_filepath), width = 800, height = 600)
+                self.created_files.append(png_corrmap_filepath)
 
                 logger.info("Correlation heatmap saved at {corrmap_filepath}")
                 # fig.show()
             except Exception as e:
                 logger.warning(f"Could not create correlation heatmap: {e}")
 
-    @staticmethod
-    def plot_categorical_distributions(df: pd.DataFrame):
+
+    def plot_categorical_distributions(self, df: pd.DataFrame, categorical_analysist:dict):
         """Plot distributions for categorical columns"""
         categorical_cols = df.select_dtypes(include=['object', 'category']).columns
-        
-        for col in categorical_cols:
-            if df[col].nunique() <= 20:  # Only plot if not too many categories
-                try:
-                    value_counts = df[col].value_counts()
-                    fig = px.bar(x=value_counts.index, y=value_counts.values,
-                                title=f'Distribution of {col}')
-                    # fig.show()
 
-                    cat_filename = f"Categorical_plots{self.safe_filename(col)}.html"
+        try:
+            if categorical_cols:
+                for col in categorical_cols:
+                    if df[col].nunique() <= 20:  # Only plot if not too many categories
+                        value_counts = df[col].value_counts()
+                        fig = px.bar(x=value_counts.index, y=value_counts.values,
+                                    title=f'Distribution of {col}')
+                            # fig.show()
+
+                        cat_filename = f"Categorical_plots{DataVisualizer.safe_filename(col)}.html"
+                        cat_filepath = self.output_dir/cat_filename
+                        fig.write_html(str(cat_filepath), include_plotlyjs=True, full_html=True)
+                        self.created_files.append(cat_filepath)
+
+                        logger.info("Categorical plot saved to: {cat_filepath}")
+            
+            else:
+                for col_name, col_data in categorical_analysist.items():
+                    top_values = col_data['top_values']
+                    categories = list(top_values.keys())
+                    counts = list(top_values.values())
+
+                    str_categories = [str(c) for c in categories]
+                    fig = px.bar(
+                        x=str_categories,
+                        y=counts,
+                        title = f"Disctribution of {col_name}",
+                        labels = {'x': col_name, 'y':'Count'}
+                    )
+
+                    fig.update_layout(
+                        xaxis_tickagnle =-45, hovermode = 'x'
+                    )
+
+                    cat_filename = f"Categorical_plots{DataVisualizer.safe_filename(col_name)}.html"
                     cat_filepath = self.output_dir/cat_filename
-                    fig.write_html(str(cat_filepath))
-                    self.created_files.append(filepath)
+                    fig.write_html(str(cat_filepath),include_plotlyjs=True,full_html=True)
+                    self.created_files.append(cat_filepath)
+
+                    png_cat_filename = f"Categorical_plots_{DataVisualizer.safe_filename(col)}.png"
+                    png_cat_filepath = self.output_dir/png_cat_filename
+                    fig.write_image(str(png_cat_filepath), width = 800, height = 600)
+                    self.created_files.append(png_cat_filepath)
 
                     logger.info("Categorical plot saved to: {cat_filepath}")
-                
-                except Exception as e:
-                    logger.warning(f"Could not create categorical plot for {col}: {e}")
+                        
+        except Exception as e:
+            logger.warning(f"Could not create categorical plot: {e}")
     
     def create_summary(self, df: pd.DataFrame, results):
         """HTML for capturing all visualisations"""
@@ -315,11 +368,11 @@ class DataVisualizer:
                 if file_path.suffix == '.html':
                     html_content += f'<a href="{file_path.name}" class="plot-link">{file_path.stem.replace("_", " ").title()}</a>\n'
             
-            html_content += """</body></html>"""
+            html_content += """\n</body></html>"""
 
             index_path = self.output_dir/"index.html"
             with open(index_path, 'w') as f:
-                f.write(html.content)
+                f.write(html_content)
 
             logger.success(f"Plot index created: {index_path}")
 
@@ -352,7 +405,7 @@ class DataVisualizer:
                 for file_path in png_files:
                     print(f"{file_path.name}")
 
-            print(f"\n To view the plots: open {self.out_dir}/index.html in your browser\n")
+            print(f"\n To view the plots: open {self.output_dir}/index.html in your browser\n")
 
             print("="*50)
 
@@ -532,10 +585,14 @@ class AutoEDA:
             # GENERATE VISUALIZATIONS
             if visualize:
                 logger.info("Creating visualizations...")
-                self.visualizer.create_scatter_plots(results.store_corr_matrix, df)
+                self.visualizer.create_scatter_plot(results.store_corr_matrix, df)
                 self.visualizer.create_distribution_plots(df)
                 self.visualizer.create_correlation_heatmap(df)
-                self.visualizer.create_categorical_plots(df)
+
+
+                # self.visualizer.create_categorical_plots(df)
+                # Linking Cat_analysis 
+                self.visualizer.plot_categorical_distributions(df, results.categorical_analysis)
 
                 self.visualizer.generate_plot_index()
                 self.visualizer.print_visualization_summary()
@@ -626,302 +683,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# def plot_data(store_corr_columns, df):
-#     print("1\n")
-#     if len(store_corr_columns)>=2:
-#         for i in range(len(store_corr_columns)):
-#             col_x, col_y, _ = store_corr_columns[i]
-#             try:
-#                 fig = px.scatter(df, x=col_x, y=col_y, title=f"Scatter Plot of {col_x} vs {col_y}")
-#                 fig.show()
-#             except Exception as e:
-#                 logger.warning(f"Damn bruh we can't plot your scatter plot cuz *drum roll please*: {e}")
-    
-#     else:
-#         # plot pie chart for all labels in label type columns if --visualise set to true
-#         pass
-
-
-
-# def create_correlation_heatmap(df):
-#     """Create an interactive correlation heatmap"""
-#     numeric_df = df.select_dtypes(include=[np.number])
-#     if not numeric_df.empty:
-#         corr_matrix = numeric_df.corr()
-#         fig = px.imshow(corr_matrix, 
-#                        title="Correlation Heatmap",
-#                        color_continuous_scale='RdBu_r',
-#                        aspect="auto")
-#         fig.show()
-
-# def plot_categorical_distributions(df):
-#     """Plot distributions for categorical columns"""
-#     categorical_cols = df.select_dtypes(include=['object', 'category']).columns
-    
-#     for col in categorical_cols:
-#         if df[col].nunique() <= 20:  # Only plot if not too many categories
-#             value_counts = df[col].value_counts()
-#             fig = px.bar(x=value_counts.index, y=value_counts.values,
-#                         title=f'Distribution of {col}')
-#             fig.show()
-
-# def analyze_categorical_columns(df, max_unique_threshold=20):
-#     """Heuristic-based analysis of categorical-like columns"""
-#     cat_analysis = {}
-
-#     for col in df.columns:
-#         unique_vals = df[col].nunique(dropna=False)
-#         total_vals = len(df[col])
-#         dtype = df[col].dtype
-
-#         # Heuristic: consider any column with few unique values as categorical
-#         if dtype in ['object', 'category'] or unique_vals <= max_unique_threshold:
-#             cat_analysis[col] = {
-#                 'dtype': str(dtype),
-#                 'unique_count': unique_vals,
-#                 'unique_percentage': (unique_vals / total_vals) * 100,
-#                 'top_values': df[col].value_counts(dropna=False).head(5).to_dict(),
-#                 'is_high_cardinality': unique_vals > total_vals * 0.5,
-#                 'potential_id_column': unique_vals == total_vals,
-#                 'is_binary': unique_vals == 2
-#             }
-
-#     return cat_analysis
-
-
-# def check_datatype(df):
-#     """Checks datatype of columns to detect date-time or numeric type stored in incorrect format"""
-#     print('16\n')
-#     issues = {}
-
-#     for col in df.columns:
-#         col_issues = []
-
-#         if df[col].dtype=='object':
-#             temp_vals = df[col].dropna().head(10).astype(str)
-#             if any(len(val)>8 and ('-' in val or '/' in val) for val in temp_vals):
-#                 col_issues.append("Potential datatime column stored as object")
-            
-#             else:
-#                 try:
-#                     pd.to_numeric(df[col], errors='raise')
-#                     col_issues.append("Numeric data stored as object")
-#                 except:
-#                     temp_types = df[col].dropna().apply(type).unique()
-#                     if len(temp_types)>1:
-#                         col_issues.append(f"Mixed datatypes in {temp_types}")
-        
-#         if col_issues:
-#             issues[col]=col_issues
-
-#     print('17\n')
-    
-#     return issues
-
-
-# def call_summarise_csv(filetype):
-#     print("2\n")
-#     df = pd.read_csv(filetype)
-#     no_of_records, no_of_columns = df.shape
-
-#     column_names = df.columns.to_list()
-#     check_null_value_columns = df.isnull().sum()
-#     check_null_value_columns = check_null_value_columns[check_null_value_columns > 0].to_dict()
-
-#     # data_info = df.info().to_string()
-#     buffer = io.StringIO()
-#     df.info(buf=buffer)
-#     data_info = buffer.getvalue()
-
-#     # data_correlation = df.corr().to_numpy()
-#     numeric_df = df.select_dtypes(include=np.number)
-#     store_corr_columns = []
-#     # for i in range(len(data_correlation)):
-#     #     for j in range(len(data_correlation[0])):
-#     #         if abs(data_correlation[i][j]) >= 0.5:
-#     #             store_corr_columns.append((column_names[i], column_names[j], data_correlation[i][j]))
-#     if not numeric_df.empty:
-#         corr_matrix = numeric_df.corr().abs()  # Absolute correlations
-#         high_corr = corr_matrix[corr_matrix > 0.5].stack().reset_index()
-#         high_corr = high_corr[high_corr['level_0'] != high_corr['level_1']]
-#         high_corr = high_corr.drop_duplicates()
-        
-#         for _, row in high_corr.iterrows():
-#             col1, col2, corr_value = row['level_0'], row['level_1'], row[0]
-#             store_corr_columns.append((col1, col2, float(corr_value)))
-#     # if store_corr_columns:
-#     #     plot_data(store_corr_columns, df)
-
-#     datatype_issues = check_datatype(df)
-#     categorical_data_analysis = analyze_categorical_columns(df)
-
-#     # return (no_of_records, no_of_columns), column_names, check_null_value_columns, data_info, store_corr_columns
-#     return {
-#         "shape": (no_of_records, no_of_columns),
-#         "columns": column_names,
-#         "columns_with_null_values":check_null_value_columns,
-#         "info_about_data": data_info,
-#         "store_corr_matrix": store_corr_columns,
-#         "dataframe":df,
-#         "potential_datatype_issues":datatype_issues,
-#         "categorical_data":categorical_data_analysis
-#     }
-
-
-# def analyse_file(filepath, filetype):
-#     print("3\n")
-#     if filetype == "csv":
-#         return call_summarise_csv(filepath)
-#     else:
-#         print(f"We're bringing in support for {filetype} files. Hang in there bud!")
-#         return
-    
-# def generate_llm_advice(summary):
-#     print("4\n")
-#     system_message = (f"You are a data analyst who has just performed EDA on a csv file and obtained the following results:\n"
-#                     f"Shape of data: {summary['shape']}\n"
-#                     f"List of Columns in dataset: {summary['columns']}\n"
-#                     f"Columns with null values: {summary['columns_with_null_values']}\n"
-#                     f"Data Information: {summary['info_about_data']}\n"
-#                     f"Correlation Matrix: {summary['store_corr_matrix']}\n"
-#                     "Based on this data, present future steps (as pointers in plaintext) for proceeding with data cleaning and visualisation. "
-#                     "Select from:\n 1. Remove null values \n 2. Suggest visualisations between columns \n 3. Visualize correlation matrix, etc."
-#                     )
-#     # system_message = (
-#     #                 "You are a data analyst reviewing EDA results. "
-#     #                 f"Dataset has {summary['shape'][0]} rows and {summary['shape'][1]} columns.\n"
-#     #                 f"Columns: {', '.join(summary['columns'])}\n"
-#     #                 f"Null values found in: {summary['columns_with_null_values'] or 'None'}\n"
-#     #                 "Suggest 3-5 specific next steps for data cleaning and visualization. "
-#     #                 "Be concise and focus on actionable insights."
-#     #                 )
-#     print("11\n")
-    
-#     messages = [
-#                     {
-#                         "role":"user",
-#                         "content": system_message,
-#                     }
-#                 ]
-#     print("12\n")
-#     try:
-#         print("Sending to LLM...")
-#         response = ollama.chat(
-#             model='llama3.2:latest',
-#             messages=messages,
-#             options={'num_ctx': 4096},  # Increase context window
-#             stream=False  # Disable streaming for simplicity
-#         )
-
-#         if response and 'message' in response and 'content' in response['message']:
-#             content = response['message']['content']
-#             print("LLM response received successfully")
-#             return content
-#         else:
-#             print("Empty response from LLM")
-#             return "No response from LLM"
-
-
-
-#     except Exception as e:
-#         logger.error(f"Error querying Ollama: {e}")
-#         return "Could not get advice from LLM."
-    
-# def save_report(summary, format="txt", output_path="eda_report"):
-#     print("5\n")
-#     try:
-#         if format=="json":
-#             with open(f"{output_path}.json","w") as f:
-#                 json.dump({k: v for k, v in summary.items() if k!="dataframe"},f,indent=4)
-        
-#         else:
-#             with open(f"{output_path}.txt","w") as f:
-#                 f.write("Auto EDA report\n")
-#                 f.write(f"Shape: {summary['shape']}\n")
-#                 f.write(f"Columns: {summary['columns']}\n")
-#                 f.write(f"Columns with null values: {summary['columns_with_null_values']}\n")
-#                 f.write(f"Data stats: {summary['info_about_data']}\n")
-#                 f.write("Correlation Matrix:\n")
-#                 for row in summary['store_corr_matrix']:
-#                     f.write(f"{row}\n")
-
-#         logger.success(f"Report saved to {output_path}.{format}")
-
-#     except Exception as e:
-#         logger.error(f"Error saving my bro: {e}")
-        
-
-# def test_ollama_connection():
-#     print("Testing Ollama connection...")
-#     try:
-#         response = ollama.chat(
-#             model='llama3.2:latest',
-#             messages=[{'role': 'user', 'content': 'Say "Hello World"'}]
-#         )
-#         if response and 'message' in response:
-#             print(f"Test successful! Response: {response['message']['content']}")
-#             return True
-#         else:
-#             print("Empty test response")
-#             return False
-#     except Exception as e:
-#         print(f"Test failed: {e}")
-#         return False
-
-
-# def main():
-#     print("6\n")
-#     # Test Ollama connection first
-
-#     # if not test_ollama_connection():
-#     #     logger.error("Ollama connection test failed. Cannot proceed with LLM analysis.")
-#     #     return
-#     parser = argparse.ArgumentParser(description="Perform automatic EDA for your CSV files")
-
-#     parser.add_argument("--file_path", type=str, required=True, help="Path of the csv file")
-#     parser.add_argument("--file_type", type=str, required=True, help="file extension type")
-#     parser.add_argument("--use_llm", action="store_true", help="Use ollama to provide EDA suggestions")
-#     parser.add_argument("--visualise", action="store_true", help="Assisted visualisations for data")
-#     parser.add_argument("--save_report", action="store_true", help="Save the EDA output to file")
-#     parser.add_argument("--output_format", choices=["txt", "json"], default="txt", help="Output report format")
-
-
-#     args = parser.parse_args()
-
-#     try:
-#         if not args.file_path or not args.file_type:
-#             raise ValueError("You either forgot to specify the file type or the file path.")
-        
-#         if args.use_llm is True:
-#                 # data_shape, column_list, columns_with_null_values, info_about_data, store_corr_matrix = analyse_file(args.file_path, args.file_type)
-#             summary = analyse_file(args.file_path, args.file_type)
-
-#             print(f"\n Shape: {summary['shape']}")
-#             print(f"\nColumns: {summary['columns']}")
-#             print(f"\nColumns with nulls: {summary['columns_with_null_values']}")
-#             print(f"\nCorrelated Columns (> 0.5 or < -0.5): {summary['store_corr_matrix']}\n")
-#             for corr in summary['store_corr_matrix']:
-#                 print(f"  {corr[0]} vs {corr[1]}: {corr[2]:.2f}")
-
-#             if args.visualise:
-#                 plot_data(summary['store_corr_matrix'], summary['dataframe'])
-
-#             if args.use_llm:
-#                 response = generate_llm_advice(summary)
-#                 print("\n Aight buckle up buddy this is what llama says:\n")
-#                 print("15\n")
-#                 print(response)
-
-#             if args.save_report:
-#                 save_report(summary, format=args.output_format)
-                
-        
-#     except Exception as e:
-#         logger.error("You did something wrong somewhere my bro:{e}")
-#         logger.error(traceback.format_exc())
-
-# if __name__ == "__main__":
-#     main()
