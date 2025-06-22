@@ -28,11 +28,11 @@ from .ReportGenerator import ReportGenerator
 class AutoEDA:
     """Main class for performing EDA"""
 
-    def __init__(self, model_name:str="llama3.2:latest", plot_output_dir: str = "eda_plots"):
+    def __init__(self, model_name:str="llama3.2:latest", plot_output_dir: str = "eda_plots", output_path: str = "eda_report"):
         self.analyzer = DataAnalyzer()
         self.visualizer = DataVisualizer(output_dir = plot_output_dir)
         self.llm_analyzer = LLMAnalyzer()
-        self.report_generator = ReportGenerator()
+        self.report_generator = ReportGenerator(output_path = output_path)
         self.data_loader = DataLoader()
 
     def run_eda(self, file_path: str, file_type:str, use_llm: bool=False, visualize: bool=False, save_report: bool=True, output_format: str="txt", output_path: str="eda_report", plot_output_dir: str="eda_plots")->EDAResults:
@@ -64,11 +64,12 @@ class AutoEDA:
                 self.visualizer.print_visualization_summary()
 
             # GENERATE LLM RECOMMENDATIONS IF REQUESTED
+            recommendations = ""
             if use_llm: 
                 if self.llm_analyzer.test_ollama_connection():
                     recommendations = self.llm_analyzer.generate_recommendations(results)
-                    print("\n=== Future Steps===\n")
-                    print(recommendations)
+                    # print("\n=== Future Steps===\n")
+                    # print(recommendations)
                 
                 else:
                     logger.error("LLM connection failed. Skipping recommendations")
@@ -76,7 +77,12 @@ class AutoEDA:
             # Save report if requested
             if save_report:
                 # self.report_generator.save_report(results, output_format, output_path)
-                self.report_generator.save_report(results, output_format, output_path)
+                if recommendations:
+                    # self.report_generator.save_report(results, output_format, output_path, recommendations)
+                    self.report_generator.save_report(results, output_format, recommendations)
+                else:
+                    # self.report_generator.save_report(results, output_format, output_path)
+                    self.report_generator.save_report(results, output_format)
 
             return results
 
@@ -86,22 +92,23 @@ class AutoEDA:
             raise
 
 
-    def print_basic_results(self, results:EDAResults):
+    def print_basic_results(self, results:EDAResults, output_path:str):
         """Prints basic results to console"""
 
-        print("\n====EDA RESULTS====\n")
-        print(f"Shape: {results.shape}\n")
-        print(f"Columns: {results.columns}\n")
-        print(f"Columns with Nulls: {results.columns_with_null_values}\n")
-        print(f"High correlations: {len(results.store_corr_matrix)} pairs found:\n")
+        print("="*50)
+        print(f"\n A DATA ANALYSIS REPORT HAS BEEN CREATED AND SAVED TO {output_path}/eda_report.txt")
+        # print(f"Shape: {results.shape}\n")
+        # print(f"Columns: {results.columns}\n")
+        # print(f"Columns with Nulls: {results.columns_with_null_values}\n")
+        # print(f"High correlations: {len(results.store_corr_matrix)} pairs found:\n")
 
-        for x_col, y_col, corr in results.store_corr_matrix:
-            print(f"{x_col}<->{y_col}: {corr:.2f}")
+        # for x_col, y_col, corr in results.store_corr_matrix:
+        #     print(f"{x_col}<->{y_col}: {corr:.2f}")
 
-        if results.datatype_issues:
-            print(f"\n Potential type mismatches found in {len(results.datatype_issues)} columns:")
-            for col, issues in results.datatype_issues.items():
-                print(f"{col}: {','.join(issues)}")
+        # if results.datatype_issues:
+        #     print(f"\n Potential type mismatches found in {len(results.datatype_issues)} columns:")
+        #     for col, issues in results.datatype_issues.items():
+        #         print(f"{col}: {','.join(issues)}")
 
 # def main():
 #     """Main function for CLI"""

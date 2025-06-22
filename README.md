@@ -15,7 +15,7 @@
   - Null value counts
   - Data types and structure
   - Highly correlated columns
-- Built-in plotting with Plotly (viewable as an HTML dashboard)
+- Built-in plotting with Plotly (interactable HTML dashboard for visualisation)
 
 ---
 

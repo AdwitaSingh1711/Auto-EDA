@@ -13,6 +13,9 @@ from dataclasses import dataclass
 from typing import List, Dict, Tuple, Optional, Any
 from pathlib import Path
 from plotly.subplots import make_subplots
+import webbrowser
+import platform
+import subprocess
 
 
 @dataclass
@@ -60,7 +63,6 @@ class DataAnalyzer:
     
     def check_datatypes(self, df:pd.DataFrame)->Dict[str, List[str]]:
         """Checks datatype of columns to detect date-time or numeric type stored in incorrect format"""
-        print('16\n')
         issues = {}
 
         for col in df.columns:
@@ -82,8 +84,6 @@ class DataAnalyzer:
             
             if col_issues:
                 issues[col]=col_issues
-
-        print('17\n')
         
         return issues
 
@@ -171,6 +171,33 @@ class DataVisualizer:
     def safe_filename(text: str)->str:
         """Convert text to safe filename"""
         return "".join(c for c in text if c.isalnum() or c in (' ', '_','-')).rstrip()
+    
+    def open_report_in_browser(self, index_path: Path):
+        """Opens HTML dashboard in default browser"""
+
+        if not index_path and not index_path.exists():
+            logger.warning("No index file found to open")
+            return
+
+        try:
+            # Handle WSL
+            if 'microsoft' in platform.uname().release.lower():
+                wsl_path = subprocess.check_output(
+                    ['wslpath','w',str(index_path.resolve())],
+                    text=True
+                ).strip()
+
+                webbrowser.open(f"file://{wsl_path}")
+            else:
+                webbrowser.open(f"file://{index_path.resolve()}")
+                
+            logger.info(f"Opened report in browser: {index_path}")
+            
+        except Exception as e:
+            logger.error(f"Could not open report: {e}")
+        
+        # else:
+        #     logger.warning("No index file found to open")
 
 
     def create_scatter_plot(self, correlations: List[Tuple[str,str,float]], df:pd.DataFrame):
@@ -594,7 +621,8 @@ class AutoEDA:
                 # Linking Cat_analysis 
                 self.visualizer.plot_categorical_distributions(df, results.categorical_analysis)
 
-                self.visualizer.generate_plot_index()
+                index_path = self.visualizer.generate_plot_index()
+                self.visualizer.open_report_in_browser(index_path)
                 self.visualizer.print_visualization_summary()
 
             # GENERATE LLM RECOMMENDATIONS IF REQUESTED

@@ -81,11 +81,11 @@ class DataVisualizer:
                     full_html=True )
                     self.created_files.append(filepath)
 
-                    # SAVE AS PNG
-                    png_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}_vs_{DataVisualizer.safe_filename(y_col)}.png"
-                    png_filepath = self.output_dir/png_filename
-                    fig.write_image(str(png_filepath), width = 800, height = 600)
-                    self.created_files.append(png_filepath)
+                    # # SAVE AS PNG
+                    # png_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}_vs_{DataVisualizer.safe_filename(y_col)}.png"
+                    # png_filepath = self.output_dir/png_filename
+                    # fig.write_image(str(png_filepath), width = 800, height = 600)
+                    # self.created_files.append(png_filepath)
                 
                 except Exception as e:
                     logger.warning(f"Could not create scatter plot for {x_col} vs {y_col}: {e}")
@@ -108,10 +108,10 @@ class DataVisualizer:
                                     full_html=True )
                 self.created_files.append(hist_filepath)
 
-                png_hist_filename = f"Scatter_{DataVisualizer.safe_filename(col)}.png"
-                png_filepath = self.output_dir/png_hist_filename
-                fig_hist.write_image(str(png_hist_filepath), width = 800, height = 600)
-                self.created_files.append(png_filepath)
+                # png_hist_filename = f"Scatter_{DataVisualizer.safe_filename(col)}.png"
+                # png_filepath = self.output_dir/png_hist_filename
+                # fig_hist.write_image(str(png_hist_filepath), width = 800, height = 600)
+                # self.created_files.append(png_filepath)
                 
                 # Box plot
                 fig_box = px.box(df, y=col, title=f'Box Plot of {col}')
@@ -122,12 +122,12 @@ class DataVisualizer:
                                     full_html=True)
                 self.created_files.append(box_filepath)
 
-                png_box_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}.png"
-                png_box_filepath = self.output_dir/png_box_filename
-                fig_box.write_image(str(png_box_filepath), width = 800, height = 600)
-                self.created_files.append(png_box_filepath)
+                # png_box_filename = f"Scatter_{DataVisualizer.safe_filename(x_col)}.png"
+                # png_box_filepath = self.output_dir/png_box_filename
+                # fig_box.write_image(str(png_box_filepath), width = 800, height = 600)
+                # self.created_files.append(png_box_filepath)
 
-                logger.info("Distribution plots saved for {col}")
+                logger.info(f"Distribution plots saved for {col}")
 
                 # fig_box.show()
             except Exception as e:
@@ -156,10 +156,10 @@ class DataVisualizer:
                                     full_html=True)
                 self.created_files.append(corrmap_filepath)
 
-                png_corrmap_filename = f"Correlation_heatmap.png"
-                png_corrmap_filepath = self.output_dir/png_corrmap_filename
-                fig.write_image(str(png_corrmap_filepath), width = 800, height = 600)
-                self.created_files.append(png_corrmap_filepath)
+                # png_corrmap_filename = f"Correlation_heatmap.png"
+                # png_corrmap_filepath = self.output_dir/png_corrmap_filename
+                # fig.write_image(str(png_corrmap_filepath), width = 800, height = 600)
+                # self.created_files.append(png_corrmap_filepath)
 
                 logger.info("Correlation heatmap saved at {corrmap_filepath}")
                 # fig.show()
@@ -210,12 +210,12 @@ class DataVisualizer:
                     fig.write_html(str(cat_filepath),include_plotlyjs=True,full_html=True)
                     self.created_files.append(cat_filepath)
 
-                    png_cat_filename = f"Categorical_plots_{DataVisualizer.safe_filename(col)}.png"
-                    png_cat_filepath = self.output_dir/png_cat_filename
-                    fig.write_image(str(png_cat_filepath), width = 800, height = 600)
-                    self.created_files.append(png_cat_filepath)
+                    # png_cat_filename = f"Categorical_plots_{DataVisualizer.safe_filename(col)}.png"
+                    # png_cat_filepath = self.output_dir/png_cat_filename
+                    # fig.write_image(str(png_cat_filepath), width = 800, height = 600)
+                    # self.created_files.append(png_cat_filepath)
 
-                    logger.info("Categorical plot saved to: {cat_filepath}")
+                    logger.info(f"Categorical plot saved to: {cat_filepath}")
                         
         except Exception as e:
             logger.warning(f"Could not create categorical plot: {e}")
@@ -278,7 +278,7 @@ class DataVisualizer:
             print(f"\n Visualisations Created({len(self.created_files)} files)\n")
             print(f"Output directory: {self.output_dir.absolute()}\n")
 
-            print("="*50)
+            print("="*100)
             html_files = [f for f in self.created_files if f.suffix == '.html']
             png_files = [f for f in self.created_files if f.suffix == '.png']
 
@@ -296,7 +296,7 @@ class DataVisualizer:
 
             print(f"\n To view the plots: open {self.output_dir}/index.html in your browser\n")
 
-            print("="*50)
+            print("="*100)
 
         else: 
             print("\nNo visualisations were created")

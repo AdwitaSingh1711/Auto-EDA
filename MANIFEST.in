@@ -1,2 +1,10 @@
 include README.md
-include requirements
+exclude requirements.txt
+include pyproject.toml
+include setup.py
+
+recursive-include autoeda *.py
+recursive-include tests *.py
+recursive-include tests/data *.csv
+
+global-exclude __pycache__ *.py[cod]

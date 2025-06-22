@@ -21,18 +21,21 @@ from .EDAResults import EDAResults
 class ReportGenerator:
     """Handle report generation and saving"""
 
-    @staticmethod
-    def save_report(results: EDAResults, format_type: str="txt",output_path: str="eda_report"):
+    def __init__(self, output_path: str = "eda_report"):
+        self.output_path = Path(output_path)
+        self.output_path.mkdir(parents=True, exist_ok=True)
+
+    def save_report(self, results: EDAResults, format_type: str="txt", recommendations: str=""):
         """saves eda report to a file"""
         try:
-            output_file = Path(f"{output_path}.{format_type}")
+            output_file = Path(f"{self.output_path}/eda_report.{format_type}")
 
 
             if format_type=="json":
                 ReportGenerator.save_json_report(results, output_file)
 
             else:
-                ReportGenerator.save_text_report(results, output_file)
+                ReportGenerator.save_text_report(results, output_file, recommendations)
             
             logger.success(f"Report saved to {output_file}")
 
@@ -59,10 +62,10 @@ class ReportGenerator:
 
 
     @staticmethod
-    def save_text_report(results:EDAResults, output_file: Path):
+    def save_text_report(results:EDAResults, output_file: Path, recommendations: str):
         """Save report in text format"""
         with open(output_file, 'w') as f:
-            f.write("=== AUTO EDA REPORT ===\n\n")
+            f.write("====== AUTO EDA REPORT ======\n\n")
             f.write(f"Dataset shape: {results.shape}\n\n")
             f.write(f"Columns: {results.columns}\n\n")
             f.write(f"Columns with null values: {results.columns_with_null_values}\n\n")
@@ -75,3 +78,7 @@ class ReportGenerator:
 
             f.write(f"Datatype Mismatches: {results.datatype_issues}\n")
             f.write(f"\nCategorical Analysis: {results.categorical_analysis}\n")
+
+            if recommendations:
+                f.write("\n======LLM RECOMMENDATIONS ======\n\n")
+                f.write(recommendations)

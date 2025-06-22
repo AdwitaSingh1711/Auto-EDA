@@ -9,15 +9,17 @@ setup(
         'numpy',
         'plotly',
         'loguru',
-        'argparse',
         'ollama',
         'scikit-learn',
         'matplotlib',
         'seaborn',
     ],
+    extras_require={
+        "test": ["pytest"]
+    },
     entry_points ={
         'console_scripts':[
-            'autoeda=autoeda.autoeda:main'
+            'autoeda=autoeda.run:main'
         ]
     },
 
@@ -32,5 +34,10 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ], 
-    python_requires = '3.11.1',
+    python_requires = '>=3.8',
+    include_package_data = True,
+    package_data = {
+        'autoeda': ['*.py'],
+        'tests':['data/*.csv']
+    },
 )
