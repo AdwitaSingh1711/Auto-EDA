@@ -1,6 +1,6 @@
 import argparse
 
-from autoeda.AutoEDA import AutoEDA
+from divepy.AutoEDA import AutoEDA
 
 def main():
     """Main function for CLI"""

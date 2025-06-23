@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name = 'autoeda',
-    version = '0.1.0',
+    name = 'divepy',
+    version = '0.1.2',
     packages = find_packages(),
     install_requires = [
         'pandas',
@@ -19,7 +19,7 @@ setup(
     },
     entry_points ={
         'console_scripts':[
-            'autoeda=autoeda.run:main'
+            'divepy=divepy.run:main'
         ]
     },
 
@@ -37,7 +37,7 @@ setup(
     python_requires = '>=3.8',
     include_package_data = True,
     package_data = {
-        'autoeda': ['*.py'],
+        'divepy': ['*.py'],
         'tests':['data/*.csv']
     },
 )
