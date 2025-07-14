@@ -3,6 +3,10 @@
 **DivePy** is a command-line Python tool for developers and data analysts. It performs automatic Exploratory Data Analysis (EDA) on CSV files. It summarizes the dataset, identifies missing values, creates elementary visualisation plots, highlights correlations, and can even suggest next steps using an LLM (via [Ollama](https://ollama.com)).
 
 ---
+## Demo
+
+https://drive.google.com/file/d/1-9_kQJU_9HVYR5S8t6CZu6awXGuEwAG8/view?usp=sharing
+---
 
 ## Installation
 
