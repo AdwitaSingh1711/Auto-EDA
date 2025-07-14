@@ -5,7 +5,8 @@
 ---
 ## Demo
 
-https://drive.google.com/file/d/1-9_kQJU_9HVYR5S8t6CZu6awXGuEwAG8/view?usp=sharing
+https://github.com/user-attachments/assets/34df7469-198a-4b38-ac6a-5b53bf4cbad1
+
 ---
 
 ## Installation
